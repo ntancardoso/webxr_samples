@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <body>
+    <h1>WebXR</h1>
+    <p>XR Object Details:</p>
+    <script type="text/javascript">
+      let html_text = ''
+
+      if ('xr' in window.navigator) {
+        html_text += 'WebXR is supported<br /><br />';
+        
+        const xr_session_modes = ['inline', 'immersive-vr', 'immersive-ar']
+        let xr_object_flattened = '';
+        xr_object = window.navigator.xr;
+
+        for (let key in xr_object) {
+          xr_object_flattened = xr_object_flattened + key + ' -> [' + xr_object[key] + ']';
+          xr_object_flattened = xr_object_flattened + '<br />';
+        }
+        html_text += xr_object_flattened + '<br />';
+        for (let xsm of xr_session_modes) {
+          window.navigator.xr.isSessionSupported(xsm).then((supported) => {
+            document.body.innerHTML += `${xsm} session mode is ${supported ? '' : 'not '}supported <br>`;
+          })
+          .catch((err) => showDetails(err));
+        }
+      } else {
+        html_text += 'WebXR is not supported';
+      }
+
+      document.body.innerHTML += html_text
+    </script>
+  </body>
+</html>

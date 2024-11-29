@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1.0" />
+  </head>
+  <body>
+    <title>WebXR</title>
+    <script type="text/javascript">
+      window.onload = function () {
+        initializeXR();
+      };
+
+      async function initializeXR() {
+        var sessionType = 'inline';
+        if ('xr' in window.navigator) {
+          alert('WebXR is supported');
+        } else {
+          alert('WebXR is not supported');
+          return;
+        }
+
+        window.navigator.xr
+          .isSessionSupported(sessionType)
+          .then((supported) => {
+            if (supported) {
+              console.log('This session type is supported');
+              beginXRSession(sessionType);
+            }
+            if (!supported) {
+              console.log('This session type is not supported');
+              sessionType = 'inline';
+            }
+          });
+      }
+
+      async function beginXRSession(sessionType) {
+        let glCanvas = document.createElement('canvas');
+        let glContext = glCanvas.getContext('webgl', {
+          xrCompatible: true,
+        });
+
+        let xrSession = await navigator.xr.requestSession(sessionType);
+        let xrLayer = new XRWebGLLayer(xrSession, glContext);
+        xrSession.updateRenderState({ baseLayer: xrLayer });
+        var xrSession_flattened = '';
+        for (var key in xrSession) {
+          try {
+            xrSession_flattened =
+              xrSession_flattened + key + ' -> [' + xrSession[key] + ']';
+            xrSession_flattened = xrSession_flattened + '<br>';
+          } catch (err) {}
+        }
+        document.write(xrSession_flattened);
+        console.log(xrSession);
+      }
+    </script>
+  </body>
+</html>
