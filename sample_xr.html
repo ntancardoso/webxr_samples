@@ -1,0 +1,91 @@
+<!doctype html>
+<html>
+  <body>
+    <title>WebXR Sample</title>
+    <h1>WebXR Sample App</h1>
+    <button id="enterXr">Enter XR</button>
+    <script>
+      (function () {
+        const XRSessionType = 'immersive-vr';
+        const XRRefSpaceType = 'viewer';
+
+        let xrButton = document.getElementById('enterXr');
+        let xrSession = null;
+        let xrRefSpace = null;
+        let gl = null;
+
+        function initXR() {
+          if (navigator.xr) {
+            navigator.xr.isSessionSupported(XRSessionType).then((supported) => {
+              if (!supported) {
+                xrButton.textContent = 'XR Not Supported';
+                xrButton.disabled = true;
+              }
+            });
+          }
+        }
+
+
+        function enterXR() {
+          if (!xrSession) {
+            navigator.xr.requestSession(XRSessionType).then(startSession);
+          }
+        }
+
+        function exitXR() {
+          if (xrSession) {
+            xrSession.end().then(endSession);
+          }
+        }
+
+        function startSession(session) {
+          xrSession = session;
+          xrButton.textContent = 'Exit XR';
+          xrButton.onclick = endSession;
+
+          const canvas = document.createElement('canvas');
+          gl = canvas.getContext('webgl', { xrCompatible: true });
+
+          session.updateRenderState({
+            baseLayer: new XRWebGLLayer(session, gl),
+          });
+
+          session.requestReferenceSpace(XRRefSpaceType).then((refSpace) => {
+            xrRefSpace = refSpace;
+            session.requestAnimationFrame(animationFrameCallback);
+          });
+        }
+
+        function endSession() {
+          gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+          xrSession = null;
+          xrRefSpace = null;
+          gl = null;
+        }
+
+        function animationFrameCallback(time, frame) {
+          const session = frame.session;
+
+          const pose = frame.getViewerPose(xrRefSpace);
+
+          if (pose) {
+            const glLayer = frame.session.renderState.baseLayer;
+            gl.bindFramebuffer(gl.FRAMEBUFFER, glLayer.framebuffer);
+            gl.clearColor(
+              Math.cos(time / 3000),
+              Math.cos(time / 5000),
+              Math.cos(time / 7000),
+              1.0
+            );
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+          }
+
+          session.requestAnimationFrame(animationFrameCallback);
+        }
+
+        document.getElementById("enterXr").addEventListener("click", enterXR);
+        initXR();
+      })();
+    </script>
+  </body>
+</html>
